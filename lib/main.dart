@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
-import 'dart:ui' as ui;
 
+import 'package:permission_handler/permission_handler.dart';
 import 'package:pluto_menu_bar/pluto_menu_bar.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:image/image.dart' as img;
+
 import 'dart:async';
+import 'dart:ui' as ui;
+import 'dart:io';
 import 'dart:typed_data';
 
 
@@ -44,21 +48,45 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future <Null> openButton() async {
-    final pickedFile = await picker.getImage(source: ImageSource.gallery); // source can be camera
-    if (pickedFile != null) {      
-      setState(() {
-        isImageloaded = false;
-      });
-      final ByteData data = await rootBundle.load(pickedFile.path);
-      image = await loadImage( Uint8List.view(data.buffer));
-      setState(() {
-        isImageloaded = true;
-        editor= ImageEditor(image: image);
-      });
+    if (await Permission.photos.request().isGranted) {
+      // Either the permission was already granted before or the user just granted it.
+    
+      final pickedFile = await picker.getImage(source: ImageSource.gallery); // source can be camera
+      if (pickedFile != null) {
+
+        setState(() {
+          isImageloaded = false;
+        });
+        final File imageFile = File(pickedFile.path);
+        final Uint8List data = await imageFile.readAsBytes();
+        image = await loadImage( data);
+
+        setState(() {
+          isImageloaded = true;
+          editor = ImageEditor(image: image, photo: img.decodeImage(data));
+        });
+      } else {
+        // User cancelled
+      }
+    }
+  }
+
+  Future <Null> saveButton() async {
+    if (await Permission.storage.request().isGranted) {
+      final picture = editor.recorder.endRecording();
+      final ui.Image img = await picture.toImage(
+        (editor.image.width * editor.scale).round(), 
+        (editor.image.height * editor.scale).round());
+      final pngBytes = await img.toByteData(format: ui.ImageByteFormat.png);
+      final result =
+          await ImageGallerySaver.saveImage(pngBytes.buffer.asUint8List());
+      print(result);
     }
   }
 
   void filterButton(String filter) {
+    // sets filterCurr = filter
+    
     editor.setFilter(filter);
     globalKey.currentContext.findRenderObject().markNeedsPaint();
   }
@@ -66,9 +94,6 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<ui.Image> loadImage(List<int> img) async {
     final Completer<ui.Image> completer =  Completer();
     ui.decodeImageFromList(img, (ui.Image img) {
-      setState(() {
-        isImageloaded = true;
-      });
       return completer.complete(img);
     });
     return completer.future;
@@ -85,25 +110,16 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
           PlutoMenuBarDemo(scaffoldKey: globalKey,
             openButton: () => this.openButton(),
+            saveButton: () => this.saveButton(),
             filterButton: (String text) => this.filterButton(text),
             
           ),
-          GestureDetector(
-            onPanStart: (detailData){
-              editor.down(detailData.localPosition);
-              globalKey.currentContext.findRenderObject().markNeedsPaint();
-            },
-            onPanUpdate: (detailData){
-              editor.update(detailData.localPosition);
-              globalKey.currentContext.findRenderObject().markNeedsPaint();
-            },
-            child: Container(
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height,
-              child: CustomPaint(
-                key: globalKey,
-                painter:  editor,
-              ),
+          Container(
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
+            child: CustomPaint(
+              key: globalKey,
+              painter:  editor,
             ),
           ),
         ]),
@@ -130,73 +146,89 @@ class _MyHomePageState extends State<MyHomePage> {
 
 class ImageEditor extends CustomPainter {
 
+  double scale;
+  int curveCount = 0;
+  String filterCurr = '';
+  List<List<Offset>> curve = List();
+  
+  ui.Image image;
+  img.Image photo;
+  ui.PictureRecorder recorder;
+  Canvas canvasRecorder;
+
+  final Float64List transformMatrix = Float64List.fromList(
+    [ 1, 0, 0, 0, 
+      0, 1, 0, 0,
+      0, 0, 1, 0,
+      0, 0, 0, 1]);
+
   ImageEditor({
     this.image,
+    this.photo,
   });
 
-  String filterCurr = '';
   void setFilter(String ifilter) {
     filterCurr = ifilter;
   }
 
-  final Float64List transformMatrix = Float64List.fromList(
-    [1, 0, 0, 0, 
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1]);
-
-  ui.Image image;
-
-  int curveCount = 0;
-  double brushThickness = 2.5;
-  List<List<Offset>> curve = List();
-
-  final Paint painter = new Paint()
-    ..color = Colors.blue[400]
-    ..style = PaintingStyle.fill
-    ..strokeWidth = 5;
-
-  void down(Offset offset){
-    List<Offset> tap = new List();
-    curve.add(tap);
-    curveCount += 1;
-    curve[curveCount-1].add(offset);
-  }
-  void update(Offset offset){
-    curve[curveCount-1].add(offset);
-  }
-  void end(){
-    List<Offset> tap = new List();
-    curve.add(tap);
-    curveCount += 1;
+  int abgrToArgb(int argbColor) {
+    int r = 0; //(argbColor >> 16) & 0xFF;
+    int b = argbColor & 0xFF;
+    return (argbColor & 0xFF00FF00) | (b << 16) | r;
   }
 
   @override
   void paint(Canvas canvas, Size size) {
+
     double x = globalKey.currentContext.size.width / image.width;
     double y = globalKey.currentContext.size.height / image.height;
-    if (x > y) canvas.scale(y, y);
-    else canvas.scale(x, x);
+
+    recorder = new ui.PictureRecorder();
+    canvasRecorder = new Canvas(recorder);
+
+    if (x > y) {
+      scale = y;
+    } else {
+      scale = x;
+    }
+
+    canvas.scale(scale, scale);
+    canvasRecorder.scale(scale, scale);
 
     Paint painter = new Paint();
-    if (filterCurr == 'filter1')
-      painter.invertColors = true;
-    else if (filterCurr == 'filter2')
-      painter.imageFilter = ui.ImageFilter.blur(sigmaX: image.width/500, sigmaY: image.height/500);
-    else if (filterCurr == 'filter3')
-      painter.imageFilter = ui.ImageFilter.matrix(transformMatrix);
-    canvas.drawImage(image,  Offset(0.0, 0.0),  painter);
 
-    if (x > y) canvas.scale(1/y, 1/y);
-    else canvas.scale(1/x, 1/x);
-    for(List<Offset> icurve in curve) {
-      Offset start = icurve[0];
-      canvas.drawCircle(start, 2, painter);
-      for(Offset offset in icurve){
-        canvas.drawLine(start, offset, painter);
-        canvas.drawCircle(offset, brushThickness, painter);
-        start = offset;
+    if (filterCurr == 'Invert') {
+      painter.invertColors = true;
+      canvas.drawImage(image,  Offset(0.0, 0.0),  painter);
+      canvasRecorder.drawImage(image,  Offset(0.0, 0.0),  painter);
+    }
+
+    else if (filterCurr == 'Blur') {
+      painter.imageFilter = ui.ImageFilter.blur(sigmaX: image.width/200, sigmaY: image.height/200);
+      canvas.drawImage(image,  Offset(0.0, 0.0),  painter);
+      canvasRecorder.drawImage(image,  Offset(0.0, 0.0),  painter);
+    }
+
+    else if (filterCurr == 'Antired') {
+
+      canvas.scale(1/scale, 1/scale);
+      canvasRecorder.scale(1/scale, 1/scale);
+
+      painter.strokeWidth = 1;
+      for (int i=0; i<photo.width*scale; i++) {
+        for (int j=0; j<photo.height*scale; j++) {
+
+          int abgr = photo.getPixel((i/scale).round(), (j/scale).round());
+          painter.color = Color(abgrToArgb(abgr));
+          canvas.drawPoints(ui.PointMode.points, [Offset(i/1,j/1)], painter);
+          canvasRecorder.drawPoints(ui.PointMode.points, [Offset(i/1,j/1)], painter);
+          
+        }
       }
+    }
+    else {
+      canvas.drawImage(image,  Offset(0.0, 0.0),  painter);
+      canvasRecorder.drawImage(image,  Offset(0.0, 0.0),  painter);
     }
   }
 
@@ -210,11 +242,13 @@ class ImageEditor extends CustomPainter {
 class PlutoMenuBarDemo extends StatelessWidget {
   final scaffoldKey;
   final void Function() openButton;
+  final void Function() saveButton;
   final void Function(String) filterButton;
 
   PlutoMenuBarDemo({
     this.scaffoldKey,
     this.openButton,
+    this.saveButton,
     this.filterButton,
   });
 
@@ -223,16 +257,20 @@ class PlutoMenuBarDemo extends StatelessWidget {
       print('open button');
       openButton();
     }
-    else if (text == 'filter1') {
-      print('filter1 button');
+    else if (text == 'Save') {
+      print('save button');
+      saveButton();
+    }
+    else if (text == 'Invert') {
+      print('Invert button');
       filterButton(text);
     }
-    else if (text == 'filter2') {
-      print('filter2 button');
+    else if (text == 'Blur') {
+      print('Blur button');
       filterButton(text);
     }
-    else if (text == 'filter3') {
-      print('filter3 button');
+    else if (text == 'Antired') {
+      print('Antired button');
       filterButton(text);
     }
     scaffoldKey.currentState.hideCurrentSnackBar();
@@ -277,16 +315,16 @@ class PlutoMenuBarDemo extends StatelessWidget {
         icon: Icons.science,
         children: [
           MenuItem(
-            title: 'filter1',
-            onTap: () => message(context, 'filter1'),
+            title: 'Invert',
+            onTap: () => message(context, 'Invert'),
           ),
           MenuItem(
-            title: 'filter2',
-            onTap: () => message(context, 'filter2'),
+            title: 'Blur',
+            onTap: () => message(context, 'Blur'),
           ),
           MenuItem(
-            title: 'filter3',
-            onTap: () => message(context, 'filter3'),
+            title: 'Antired',
+            onTap: () => message(context, 'Antired'),
           ),
         ],
       ),
