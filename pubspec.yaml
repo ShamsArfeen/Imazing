@@ -25,7 +25,9 @@ dependencies:
     sdk: flutter
     
   pluto_menu_bar: ^0.1.4
+  image_gallery_saver: ^1.6.7
   image_picker: ^0.6.7+21
+  permission_handler: ^5.0.1+1
   image: ^2.1.19
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
