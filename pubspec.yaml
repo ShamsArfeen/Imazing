@@ -22,8 +22,7 @@ environment:
 
 dependencies:
   flutter:
-    sdk: flutter
-    
+    sdk: flutter 
   pluto_menu_bar: ^0.1.4
   image_gallery_saver: ^1.6.7
   image_picker: ^0.6.7+21
