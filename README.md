@@ -1,4 +1,4 @@
-# Imazing
+# Imazing [![CodeFactor](https://www.codefactor.io/repository/github/shamsarfeen/imazing/badge)](https://www.codefactor.io/repository/github/shamsarfeen/imazing)
 
 V0 : Open, Save, Invert, Blur functioning.
 
