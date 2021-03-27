@@ -20,8 +20,8 @@ class _MyAppState extends State<MyApp> {
     return new SplashScreen(
       seconds: 5,
       navigateAfterSeconds: new AfterSplash(),
-      image: new Image.asset('assets/logo.png'), // #1b0753
-      backgroundColor: Colors.black,
+      image: new Image.asset('assets/Logo2.png'), // #1b0753
+      backgroundColor: Colors.black87,
       styleTextUnderTheLoader: new TextStyle(),
       photoSize: 150.0,
       loaderColor: Colors.blue.shade300
@@ -115,16 +115,16 @@ class _MyHomePageState extends State<MyHomePage> {
           width: MediaQuery.of(context).size.width,
           height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top) * 0.1,
           decoration: BoxDecoration(
-            color: Colors.black,
+            color: Colors.black54,
             image: const DecorationImage(
-              image: AssetImage('assets/logo.png'),
-              scale: 5,
+              image: AssetImage('assets/Logo2.png'),
+              scale: 2,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black54,
-                spreadRadius: 5,
-                blurRadius: 5,
+                color: Colors.black87.withOpacity(0.7),
+                spreadRadius: 10,
+                blurRadius: 10,
               ),
             ],
           ),
