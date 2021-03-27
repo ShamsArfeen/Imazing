@@ -20,10 +20,10 @@ class _MyAppState extends State<MyApp> {
     return new SplashScreen(
       seconds: 5,
       navigateAfterSeconds: new AfterSplash(),
-      image: new Image.asset('assets/Logo2.png'), // #1b0753
+      image: new Image.asset('assets/Logo5.png'), // #1b0753
       backgroundColor: Colors.black87,
       styleTextUnderTheLoader: new TextStyle(),
-      photoSize: 150.0,
+      photoSize: 120.0,
       loaderColor: Colors.blue.shade300
     );
   }
@@ -117,7 +117,7 @@ class _MyHomePageState extends State<MyHomePage> {
           decoration: BoxDecoration(
             color: Colors.black54,
             image: const DecorationImage(
-              image: AssetImage('assets/Logo2.png'),
+              image: AssetImage('assets/Logo5.png'),
               scale: 2,
             ),
             boxShadow: [
