@@ -2,6 +2,10 @@
 
 V0 : Open, Save, Invert, Blur functioning.
 
+## How to setup API
+- Setup virtual environment by running `python -m venv imazing_api`
+- Install requirements by running `pip install -r requirements.txt`
+
 ## How to test
 Create flutter new project and replace "pubspec.yaml" and "lib/main.dart".
 
