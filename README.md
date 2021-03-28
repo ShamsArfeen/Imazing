@@ -1,13 +1,29 @@
 # Imazing [![CodeFactor](https://www.codefactor.io/repository/github/shamsarfeen/imazing/badge)](https://www.codefactor.io/repository/github/shamsarfeen/imazing)
 
-V0 : Open, Save, Invert, Blur functioning.
-
 ## How to setup API
 - Setup virtual environment by running `python -m venv imazing_api`
 - Install requirements by running `pip install -r requirements.txt`
 
-## How to test
-Create flutter new project and replace "pubspec.yaml" and "lib/main.dart".
+## How to run Frontend App
+
+### Requirements
+
+- Flutter SDK
+- AVD Emulator or an Android device
+
+### Steps to run
+
+- Download all packages using `flutter pub get`
+- Connect to an emulator with `emulator -avd AVD_NAME` or use a USB-debug enabled external device
+- Test run with `flutter run`
+
+## Features Implemented
+
+- Logo
+- Flashscreen
+- Homescreen with Appbar
+- 5 Buttons for image editting
+
 
 ### Guidlines ↓
 
