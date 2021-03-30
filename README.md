@@ -19,10 +19,11 @@
 
 ## Features Implemented
 
-- Logo
+- App logo
+- App icon
 - Flashscreen
 - Homescreen with Appbar
-- 5 Buttons for image editting
+- Sliders and buttons for operations
 
 
 ### Guidlines ↓
