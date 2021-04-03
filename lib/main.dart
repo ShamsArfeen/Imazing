@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'package:splashscreen/splashscreen.dart';
+import 'package:image_picker/image_picker.dart';
+
+import 'dart:io';
+import 'dart:async';
 
 void main(){
   runApp(new MaterialApp(
@@ -52,13 +56,95 @@ class MyHomePage extends StatefulWidget {
 GlobalKey<_MyHomePageState> globalKey = GlobalKey();
 
 class _MyHomePageState extends State<MyHomePage> {
+  File _image;
+  double _currentSliderValue = 5;
+  final picker = ImagePicker();
+
+  Future <Null> newBttn() async {
+    final pickedFile = await picker.getImage(source: ImageSource.gallery);
+    setState(() {
+      if (pickedFile != null) {
+        _image = File(pickedFile.path);
+      } else {
+        print('No image selected.');
+      }
+    });
+  }
+
+  void brightChange(double value) {
+  }
+  
+  void blurChange(double value) {
+  }
+  
+  void sharpChange(double value) {
+  }
+  
+  void saturationChange(double value) {
+  }
+
+  Widget paramSlider(String label, void Function(double) callback) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          width: MediaQuery.of(context).size.width / 3,
+          alignment: Alignment.bottomLeft, child: 
+          Text(
+            label,
+            style: TextStyle(color: Colors.white)
+          ),
+        ),
+        Slider(
+          value: _currentSliderValue,
+          min: 0,
+          max: 10,
+          divisions: 10,
+          label: _currentSliderValue.toString(),
+          onChanged: (double value) {
+            callback(value);
+            setState(() {
+              _currentSliderValue = value;
+            });
+          },
+        ),
+      ]
+    );
+  }
+
+  Widget iconBttn() {
+    return Container(
+      width: MediaQuery.of(context).size.width / 5,
+      alignment: Alignment.center, 
+      child: IconButton(
+        icon: const Icon(
+          Icons.photo, 
+          color: Colors.white,
+        ),
+      )
+    );
+  }
+
+
+  Widget flipRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        iconBttn(),
+        iconBttn(),
+        iconBttn(),
+        iconBttn(),
+        iconBttn()
+      ]
+    );
+  }
 
   @override
   void initState() {
     super.initState();
   }
 
-  Container imzButton(String itext, Color icolor, IconData iicon) {
+  Container imzButton(String itext, Color icolor, IconData iicon, void Function() callback) {
     return Container(
       width: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top) * 0.2,
         decoration: BoxDecoration(
@@ -88,12 +174,12 @@ class _MyHomePageState extends State<MyHomePage> {
               iconSize: 50,
               icon: Icon(iicon),
               color: icolor,
-              onPressed: () { },
+              onPressed: callback,
             ),
           ),
           Text(
             itext,
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: icolor),
+            style: TextStyle(fontSize: 12, color: icolor),
           ),
         ],
       ),
@@ -102,43 +188,24 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget _buildImage(BuildContext context) {
     return  Scaffold(
-      appBar: PreferredSize(
-          preferredSize: Size.fromHeight(0),
-          child: AppBar( // Here we create one to set status bar color
-            backgroundColor: Colors.black, // Set any color of status bar you want; or it defaults to your theme's primary color
-          )
-        ),
-      body: ListView(
-        children: <Widget>[
-          
-        Container(
-          width: MediaQuery.of(context).size.width,
-          height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top) * 0.1,
-          decoration: BoxDecoration(
-            color: Colors.black54,
-            image: const DecorationImage(
-              image: AssetImage('assets/Logo5.png'),
-              scale: 2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black87.withOpacity(0.7),
-                spreadRadius: 10,
-                blurRadius: 10,
-              ),
+      appBar: AppBar( 
+            title: Text('Imazing'),
+            backgroundColor: Colors.black87.withOpacity(0.9),
+            actions: [
+              IconButton(icon: Icon(Icons.save, color: Colors.white,), onPressed: null)
             ],
           ),
-        ),
-
+      body: ListView(
+        children: <Widget>[
         
         Container(
           width: MediaQuery.of(context).size.width,
-          height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top) * 0.75,
+          height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top) * 0.615,
           color: Colors.black87,
         ),
 
         Container(
-          height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top) * 0.15,
+          height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top) * 0.3,
           decoration: BoxDecoration(
             color: Colors.black54.withOpacity(0),
             boxShadow: [
@@ -150,21 +217,21 @@ class _MyHomePageState extends State<MyHomePage> {
             ],
           ),
           child: ListView(
-            scrollDirection: Axis.horizontal,
+            scrollDirection: Axis.vertical,
             children: <Widget>[
-              imzButton('New Image', Colors.blueGrey.shade700, Icons.photo),
-              Container(width: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top) * 0.02),
-              imzButton('Quick Save', Colors.blueAccent.shade700, Icons.save),
-              Container(width: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top) * 0.02),
-              imzButton('Apply Filters', Colors.lightBlueAccent.shade700, Icons.science),
-              Container(width: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top) * 0.02),
-              imzButton('Pro-Editor', Colors.brown.shade700, Icons.handyman),
-              Container(width: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top) * 0.02),
-              imzButton('Compress <1MB', Colors.teal.shade700, Icons.save_alt),
+              paramSlider('Brightness', brightChange),
+              Container(height: MediaQuery.of(context).size.height * 0.02),
+              paramSlider('Smoothness', blurChange),
+              Container(height: MediaQuery.of(context).size.height * 0.02),
+              paramSlider('Sharpness', sharpChange),
+              Container(height: MediaQuery.of(context).size.height * 0.02),
+              paramSlider('Saturation', saturationChange),
+              Container(height: MediaQuery.of(context).size.height * 0.02),
+              flipRow(),
+              Container(height: MediaQuery.of(context).size.height * 0.02),
             ],
           ),
         ),
-
       ]),
     );
   }
