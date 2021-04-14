@@ -26,6 +26,7 @@ dependencies:
     
   splashscreen:
   image_picker: ^0.6.7+21
+  pinch_zoom: ^0.0.4
 
 dev_dependencies:
   flutter_test:
