@@ -27,6 +27,11 @@ dependencies:
   image_gallery_saver: ^1.6.8
   image: ^3.0.2
   pluto_menu_bar: ^0.1.4
+  pinch_zoom: ^0.1.0
+  photo_view: ^0.11.1
+#  image_gallery_saver: ^1.6.9
+#  gallery_saver: ^2.1.0
+
 
 
 
