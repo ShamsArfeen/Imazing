@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:splashscreen/splashscreen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pinch_zoom/pinch_zoom.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 
 import 'dart:io';
 import 'dart:async';
@@ -87,17 +88,6 @@ class _MyHomePageState extends State<MyHomePage> {
   int _screen = 0;
   final picker = ImagePicker();
 
-  Future <Null> newBttn() async {
-    final pickedFile = await picker.getImage(source: ImageSource.gallery);
-    setState(() {
-      if (pickedFile != null) {
-        _image = File(pickedFile.path);
-      } else {
-        print('No image selected.');
-      }
-    });
-  }
-
   void brightChange(double value) {
   }
   
@@ -171,6 +161,17 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
   }
 
+  Future <Null> _savePhoto() async {
+    final result = await ImageGallerySaver.saveFile(_image.path);
+    print(result);
+  }
+
+  _returnToHome() {
+    setState(() {
+      _screen = 0;
+    });
+  }
+
   Container imzButton(String itext, Color icolor, IconData iicon, void Function() callback) {
     return Container(
       width: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top) * 0.2,
@@ -219,9 +220,6 @@ class _MyHomePageState extends State<MyHomePage> {
         appBar: AppBar( 
               title: Text('Imazing'),
               backgroundColor: Colors.black87.withOpacity(0.9),
-              actions: [
-                IconButton(icon: Icon(Icons.save, color: Colors.white,), onPressed: null)
-              ],
             ),
         body: homeScreen()
       );
@@ -232,7 +230,8 @@ class _MyHomePageState extends State<MyHomePage> {
               title: Text('Imazing'),
               backgroundColor: Colors.black87.withOpacity(0.9),
               actions: [
-                IconButton(icon: Icon(Icons.save, color: Colors.white,), onPressed: null)
+                IconButton(icon: Icon(Icons.save, color: Colors.white,), onPressed: _savePhoto,),
+                IconButton(icon: Icon(Icons.arrow_back, color: Colors.white,), onPressed: _returnToHome, ),
               ],
             ),
         body: editScreen()
