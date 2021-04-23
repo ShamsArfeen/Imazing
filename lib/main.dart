@@ -86,6 +86,7 @@ class _MyHomePageState extends State<MyHomePage> {
   File _image;
   double _currentSliderValue = 5;
   int _screen = 0;
+  int _subscreen = 0;
   final picker = ImagePicker();
 
   void brightChange(double value) {
@@ -129,29 +130,71 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget iconBttn() {
+  Widget iconBttn (Icon picture, void Function() callback) {
     return Container(
       width: MediaQuery.of(context).size.width / 5,
       alignment: Alignment.center, 
       child: IconButton(
-        icon: const Icon(
-          Icons.photo, 
-          color: Colors.white,
-        ),
+        onPressed: callback,
+        icon: picture
       )
     );
   }
 
+  void doNothing() {
+
+  }
+  void lightbulb() {
+    if ( _screen != 2 || _subscreen != 0 ) {
+      setState(() {
+        _screen = 2;
+        _subscreen = 0;
+      });
+    }
+    else {
+      setState(() {
+        _screen = 1;
+      });
+    }
+  }
+
+  void science() {
+    if ( _screen != 2 || _subscreen != 1 ) {
+      setState(() {
+        _screen = 2;
+        _subscreen = 1;
+      });
+    }
+    else {
+      setState(() {
+        _screen = 1;
+      });
+    }
+  }
+
+  void hardware() {
+    if ( _screen != 2 || _subscreen != 2 ) {
+      setState(() {
+        _screen = 2;
+        _subscreen = 2;
+      });
+    }
+    else {
+      setState(() {
+        _screen = 1;
+      });
+    }
+  }
 
   Widget flipRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        iconBttn(),
-        iconBttn(),
-        iconBttn(),
-        iconBttn(),
-        iconBttn()
+        iconBttn( Icon( Icons.rotate_right_rounded, color: Colors.white) , doNothing),
+        iconBttn( Icon( Icons.rotate_left_rounded, color: Colors.white) , doNothing),
+        iconBttn( Icon( Icons.compress, color: Colors.white) , doNothing),
+        iconBttn( Icon( Icons.swap_horizontal_circle, color: Colors.white) , doNothing),
+        iconBttn( Icon( Icons.swap_vertical_circle, color: Colors.white), doNothing)
       ]
     );
   }
@@ -215,6 +258,15 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildImage(BuildContext context) {
+    PreferredSizeWidget AppbarWithSave =  AppBar( 
+      title: Text('Imazing'),
+      backgroundColor: Colors.black87.withOpacity(0.9),
+      actions: [
+        IconButton(icon: Icon(Icons.save, color: Colors.white,), onPressed: _savePhoto,),
+        IconButton(icon: Icon(Icons.arrow_back, color: Colors.white,), onPressed: _returnToHome, ),
+      ],
+    );
+
     if (_screen == 0) {
       return  Scaffold(
         appBar: AppBar( 
@@ -226,31 +278,138 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     else if (_screen == 1){
       return  Scaffold(
-        appBar: AppBar( 
-              title: Text('Imazing'),
-              backgroundColor: Colors.black87.withOpacity(0.9),
-              actions: [
-                IconButton(icon: Icon(Icons.save, color: Colors.white,), onPressed: _savePhoto,),
-                IconButton(icon: Icon(Icons.arrow_back, color: Colors.white,), onPressed: _returnToHome, ),
-              ],
-            ),
+        appBar: AppbarWithSave,
+        body: viewScreen()
+      );
+    }
+    else if (_screen == 2){
+      return  Scaffold(
+        appBar: AppbarWithSave,
         body: editScreen()
       );
     }
   }
 
-
-  Widget editScreen() {
+  Widget viewScreen() {
     return ListView(
       children: <Widget>[
       
       Container(
         width: MediaQuery.of(context).size.width,
-        height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top) * 0.615,
+        height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top) * 0.825,
         color: Colors.black87,
         child: PinchZoom(
             image: Image.file(_image),
-            zoomedBackgroundColor: Colors.black.withOpacity(0.5),
+            zoomedBackgroundColor: Colors.black87,
+            resetDuration: const Duration(milliseconds: 100),
+            maxScale: 2.5,
+            onZoomStart: (){print('Start zooming');},
+            onZoomEnd: (){print('Stop zooming');},
+        ),
+      ),
+      
+      Container(
+        height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top) * 0.099,
+
+        color: Colors.black87.withOpacity(0.95),
+        child: 
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                iconBttn( getLightbulb(), lightbulb ),
+                iconBttn( getScience(), science ),
+                iconBttn( getHandyman(), hardware ),
+              ]
+            )
+      ),
+
+    ]);
+  }
+
+  
+  Widget widgetLightbulb() {
+    return Container(
+      height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top) * 0.152,
+      color: Colors.black87,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: <Widget>[
+          paramSlider('Brightness', brightChange),
+          paramSlider('Smoothness', blurChange),
+        ],
+      ),
+    );
+  }
+    
+  Widget widgetScience() {
+    return Container(
+      height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top) * 0.152,
+      color: Colors.black87,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: <Widget>[
+          paramSlider('Sharpness', sharpChange),
+          paramSlider('Saturation', saturationChange),
+        ],
+      ),
+    );
+  }
+    
+  Widget widgetHardware() {
+    return Container(
+      height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top) * 0.152,
+      color: Colors.black87,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: <Widget>[
+          flipRow(),
+        ],
+      ),
+    );
+  }
+
+  Icon getLightbulb() {
+    if (_subscreen != 0 || _screen != 2)
+      return Icon( Icons.lightbulb, color: Colors.white);
+    else 
+      return Icon( Icons.lightbulb, color: Colors.blue);
+  }
+
+  Icon getScience() {
+    if (_subscreen != 1 || _screen != 2)
+      return Icon( Icons.science, color: Colors.white);
+    else 
+      return Icon( Icons.science, color: Colors.blue);
+  }
+  
+  Icon getHandyman() {
+    if (_subscreen != 2 || _screen != 2)
+      return Icon( Icons.handyman, color: Colors.white);
+    else 
+      return Icon( Icons.handyman, color: Colors.blue);
+  }
+  
+  Widget editScreen() {
+
+    Widget subWidget;
+
+    if (_subscreen == 0)
+      subWidget = widgetLightbulb();
+    else if (_subscreen == 1)
+      subWidget = widgetScience();
+    else if (_subscreen == 2)
+      subWidget = widgetHardware();
+
+    return ListView(
+      children: <Widget>[
+      
+      Container(
+        width: MediaQuery.of(context).size.width,
+        height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top) * 0.674,
+        color: Colors.black87,
+        child: PinchZoom(
+            image: Image.file(_image),
+            zoomedBackgroundColor: Colors.black87,
             resetDuration: const Duration(milliseconds: 100),
             maxScale: 2.5,
             onZoomStart: (){print('Start zooming');},
@@ -258,34 +417,23 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
 
+      subWidget,
+      
       Container(
-        height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top) * 0.3,
-        decoration: BoxDecoration(
-          color: Colors.black54.withOpacity(0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black87,
-              spreadRadius: 10,
-              blurRadius: 10,
-            ),
-          ],
-        ),
-        child: ListView(
-          scrollDirection: Axis.vertical,
-          children: <Widget>[
-            paramSlider('Brightness', brightChange),
-            Container(height: MediaQuery.of(context).size.height * 0.02),
-            paramSlider('Smoothness', blurChange),
-            Container(height: MediaQuery.of(context).size.height * 0.02),
-            paramSlider('Sharpness', sharpChange),
-            Container(height: MediaQuery.of(context).size.height * 0.02),
-            paramSlider('Saturation', saturationChange),
-            Container(height: MediaQuery.of(context).size.height * 0.02),
-            flipRow(),
-            Container(height: MediaQuery.of(context).size.height * 0.02),
-          ],
-        ),
+        height: (MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top) * 0.099,
+
+        color: Colors.black87.withOpacity(0.95),
+        child: 
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                iconBttn( getLightbulb(), lightbulb ),
+                iconBttn( getScience(), science ),
+                iconBttn( getHandyman(), hardware ),
+              ]
+            )
       ),
+
     ]);
   }
 
