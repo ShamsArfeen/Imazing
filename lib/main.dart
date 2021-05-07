@@ -4,6 +4,7 @@ import 'package:splashscreen/splashscreen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pinch_zoom/pinch_zoom.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:double_back_to_close_app/double_back_to_close_app.dart';
 
 import 'dart:io';
 import 'dart:async';
@@ -37,8 +38,16 @@ class AfterSplash extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: MyHomePage(),
-      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        body: DoubleBackToCloseApp(
+          child: MyHomePage(),
+          snackBar: const SnackBar(
+            content: Text('Tap back again to exit Imazing'),
+          ),
+        ),
+
+        // debugShowCheckedModeBanner: false,
+      ),
     );
   }
 }
@@ -227,9 +236,35 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _returnToHome() {
-    setState(() {
-      _screen = 0;
-    });
+    // setState(() {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            // title: new Text("Alert Dialog title"),
+            content: new Text("Are you sure you want to return to Home"),
+            actions: <Widget>[
+              // usually buttons at the bottom of the dialog
+              new TextButton(
+                  child: new Text("Yes"),
+                  onPressed: () {
+                    setState(() {
+                      _screen = 0;
+                      Navigator.of(context).pop();
+                    });
+                  }),
+              new TextButton(
+                  child: new Text("No"),
+                  onPressed: () {
+                    setState(() {
+                      _screen = 1;
+                      Navigator.of(context).pop();
+                    });
+                  }),
+            ],
+          );
+          // });
+        });
   }
 
   Container imzButton(
@@ -362,8 +397,8 @@ class _MyHomePageState extends State<MyHomePage> {
               MediaQuery.of(context).padding.top) *
           0.152,
       color: Colors.black87,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      child: ListView(
+        // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
           paramSlider('Brightness', brightChange),
           paramSlider('Smoothness', blurChange),
@@ -378,8 +413,8 @@ class _MyHomePageState extends State<MyHomePage> {
               MediaQuery.of(context).padding.top) *
           0.152,
       color: Colors.black87,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      child: ListView(
+        // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
           paramSlider('Sharpness', sharpChange),
           paramSlider('Saturation', saturationChange),
