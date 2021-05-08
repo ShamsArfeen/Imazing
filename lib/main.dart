@@ -254,7 +254,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     });
                   }),
               new TextButton(
-                  child: new Text("No"),
+                  child: new Text("Cancel"),
                   onPressed: () {
                     setState(() {
                       _screen = 1;
@@ -334,11 +334,37 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         IconButton(
           icon: Icon(
-            Icons.arrow_back,
+            Icons.home,
             color: Colors.white,
           ),
           onPressed: _returnToHome,
         ),
+        IconButton(
+          icon: Icon(Icons.info_outline),
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                // return object of type Dialog
+                return AlertDialog(
+                  title: new Text("Help"),
+                  content: new Text(
+                      "Edit your image using the options given below. Adjust the brightness, saturation and smoothness of the image. "
+                      "You can also rotate, flip and mirror your desired image."),
+                  actions: <Widget>[
+                    // usually buttons at the bottom of the dialog
+                    new TextButton(
+                      child: new Text("Ok"),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        )
       ],
     );
 
@@ -347,6 +373,36 @@ class _MyHomePageState extends State<MyHomePage> {
           appBar: AppBar(
             title: Text('Imazing'),
             backgroundColor: Colors.black87.withOpacity(0.9),
+            actions: [
+              IconButton(
+                icon: Icon(
+                  Icons.info_outlined,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      // return object of type Dialog
+                      return AlertDialog(
+                        title: new Text("Help"),
+                        content: new Text(
+                            "Imazing is an image editing application. Upload an image from the gallery or camera and proceed to the edit screen"),
+                        actions: <Widget>[
+                          // usually buttons at the bottom of the dialog
+                          new TextButton(
+                            child: new Text("Close"),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
           ),
           body: homeScreen());
     } else if (_screen == 1) {
